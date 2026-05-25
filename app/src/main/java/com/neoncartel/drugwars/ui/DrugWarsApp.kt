@@ -63,6 +63,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -71,6 +72,8 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -108,6 +111,10 @@ fun DrugWarsApp(viewModel: GameViewModel, audio: GameAudio) {
     val navController = rememberNavController()
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
+    val systemDensity = LocalDensity.current
+    val gameDensity = remember(systemDensity) {
+        Density(systemDensity.density, fontScale = systemDensity.fontScale.coerceAtMost(1.0f))
+    }
 
     LaunchedEffect(uiState.message) {
         uiState.message?.let { message ->
@@ -116,100 +123,102 @@ fun DrugWarsApp(viewModel: GameViewModel, audio: GameAudio) {
         }
     }
 
-    Scaffold(
-        containerColor = Color(0xFF05060A),
-        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
-    ) { padding ->
-        Box(
-            Modifier
-                .padding(padding)
-                .fillMaxSize()
-                .background(
-                    Brush.radialGradient(
-                        listOf(Color(0xFF172033), Color(0xFF05060A)),
-                        radius = 900f,
+    CompositionLocalProvider(LocalDensity provides gameDensity) {
+        Scaffold(
+            containerColor = Color(0xFF05060A),
+            snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
+        ) { padding ->
+            Box(
+                Modifier
+                    .padding(padding)
+                    .fillMaxSize()
+                    .background(
+                        Brush.radialGradient(
+                            listOf(Color(0xFF172033), Color(0xFF05060A)),
+                            radius = 900f,
+                        ),
                     ),
-                ),
-        ) {
-            if (uiState.loading) {
-                LoadingScreen()
-            } else {
-                NavHost(
-                    navController = navController,
-                    startDestination = "select",
-                    modifier = Modifier.fillMaxSize(),
-                ) {
-                    composable("select") {
-                        CharacterSelectScreen(
-                            uiState = uiState,
-                            onCharacter = viewModel::selectCharacter,
-                            onDifficulty = viewModel::setDifficulty,
-                            onStart = {
-                                audio.play(Cue.Ambient, enabled = true)
-                                viewModel.startNewGame()
-                                navController.navigate("game") {
-                                    popUpTo("select") { inclusive = false }
-                                }
-                            },
-                            onContinue = {
-                                audio.play(Cue.Click, enabled = uiState.game?.audioEnabled ?: true)
-                                navController.navigate("game")
-                            },
-                        )
-                    }
-                    composable("game") {
-                        val game = uiState.game
-                        if (game == null) {
-                            EmptyRunScreen(onBack = { navController.navigate("select") })
-                        } else {
-                            GameScreen(
-                                game = game,
-                                onTrade = { item, mode ->
-                                    audio.play(if (mode == TradeMode.BUY) Cue.Buy else Cue.Sell, game.audioEnabled)
-                                    viewModel.dispatch(GameAction.Trade(item, 1, mode))
-                                },
-                                onAction = { action, cue ->
-                                    audio.play(cue, game.audioEnabled)
-                                    viewModel.dispatch(action)
-                                },
-                                onTravel = { navController.navigate("travel") },
-                                onSettings = { navController.navigate("settings") },
-                            )
-                        }
-                    }
-                    composable("travel") {
-                        val game = uiState.game
-                        if (game != null) {
-                            TravelScreen(
-                                game = game,
-                                onBack = { navController.popBackStack() },
-                                onTravel = { cityId ->
-                                    audio.play(Cue.Travel, game.audioEnabled)
-                                    viewModel.dispatch(GameAction.Travel(cityId))
-                                    navController.popBackStack()
-                                },
-                            )
-                        }
-                    }
-                    composable("settings") {
-                        SettingsScreen(
-                            uiState = uiState,
-                            onBack = { navController.popBackStack() },
-                            onToggleAudio = {
-                                val enabled = uiState.game?.audioEnabled ?: true
-                                audio.play(Cue.Click, enabled)
-                                viewModel.dispatch(GameAction.ToggleAudio)
-                            },
-                            onClear = {
-                                scope.launch {
-                                    audio.play(Cue.Danger, true)
-                                    viewModel.abandonRun()
-                                    navController.navigate("select") {
-                                        popUpTo("select") { inclusive = true }
+            ) {
+                if (uiState.loading) {
+                    LoadingScreen()
+                } else {
+                    NavHost(
+                        navController = navController,
+                        startDestination = "select",
+                        modifier = Modifier.fillMaxSize(),
+                    ) {
+                        composable("select") {
+                            CharacterSelectScreen(
+                                uiState = uiState,
+                                onCharacter = viewModel::selectCharacter,
+                                onDifficulty = viewModel::setDifficulty,
+                                onStart = {
+                                    audio.play(Cue.Ambient, enabled = true)
+                                    viewModel.startNewGame()
+                                    navController.navigate("game") {
+                                        popUpTo("select") { inclusive = false }
                                     }
-                                }
-                            },
-                        )
+                                },
+                                onContinue = {
+                                    audio.play(Cue.Click, enabled = uiState.game?.audioEnabled ?: true)
+                                    navController.navigate("game")
+                                },
+                            )
+                        }
+                        composable("game") {
+                            val game = uiState.game
+                            if (game == null) {
+                                EmptyRunScreen(onBack = { navController.navigate("select") })
+                            } else {
+                                GameScreen(
+                                    game = game,
+                                    onTrade = { item, mode ->
+                                        audio.play(if (mode == TradeMode.BUY) Cue.Buy else Cue.Sell, game.audioEnabled)
+                                        viewModel.dispatch(GameAction.Trade(item, 1, mode))
+                                    },
+                                    onAction = { action, cue ->
+                                        audio.play(cue, game.audioEnabled)
+                                        viewModel.dispatch(action)
+                                    },
+                                    onTravel = { navController.navigate("travel") },
+                                    onSettings = { navController.navigate("settings") },
+                                )
+                            }
+                        }
+                        composable("travel") {
+                            val game = uiState.game
+                            if (game != null) {
+                                TravelScreen(
+                                    game = game,
+                                    onBack = { navController.popBackStack() },
+                                    onTravel = { cityId ->
+                                        audio.play(Cue.Travel, game.audioEnabled)
+                                        viewModel.dispatch(GameAction.Travel(cityId))
+                                        navController.popBackStack()
+                                    },
+                                )
+                            }
+                        }
+                        composable("settings") {
+                            SettingsScreen(
+                                uiState = uiState,
+                                onBack = { navController.popBackStack() },
+                                onToggleAudio = {
+                                    val enabled = uiState.game?.audioEnabled ?: true
+                                    audio.play(Cue.Click, enabled)
+                                    viewModel.dispatch(GameAction.ToggleAudio)
+                                },
+                                onClear = {
+                                    scope.launch {
+                                        audio.play(Cue.Danger, true)
+                                        viewModel.abandonRun()
+                                        navController.navigate("select") {
+                                            popUpTo("select") { inclusive = true }
+                                        }
+                                    }
+                                },
+                            )
+                        }
                     }
                 }
             }
@@ -246,87 +255,126 @@ private fun CharacterSelectScreen(
     onStart: () -> Unit,
     onContinue: () -> Unit,
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = 24.dp, vertical = 18.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp),
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
+    BoxWithConstraints(Modifier.fillMaxSize()) {
+        val compact = maxHeight < 460.dp || maxWidth < 820.dp
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = if (compact) 14.dp else 24.dp, vertical = if (compact) 8.dp else 18.dp),
+            verticalArrangement = Arrangement.spacedBy(if (compact) 8.dp else 14.dp),
         ) {
-            Column {
-                Text("NEON CARTEL", color = Color.White, fontSize = 32.sp, fontWeight = FontWeight.Black)
-                Text("Pick an operator. Buy low, move fast, survive the heat.", color = Color(0xFFCBD5E1))
-            }
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                if (uiState.game != null) {
-                    ElevatedButton(onClick = onContinue) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                Column(Modifier.weight(1f)) {
+                    Text(
+                        "NEON CARTEL",
+                        color = Color.White,
+                        fontSize = if (compact) 20.sp else 30.sp,
+                        fontWeight = FontWeight.Black,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    Text(
+                        "Pick an operator. Buy low, move fast, survive the heat.",
+                        color = Color(0xFFCBD5E1),
+                        fontSize = if (compact) 12.sp else 14.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    if (uiState.game != null) {
+                        ElevatedButton(onClick = onContinue) {
+                            Icon(Icons.Filled.PlayArrow, contentDescription = null)
+                            Spacer(Modifier.width(6.dp))
+                            Text("Continue", maxLines = 1)
+                        }
+                    }
+                    Button(onClick = onStart) {
                         Icon(Icons.Filled.PlayArrow, contentDescription = null)
-                        Spacer(Modifier.width(8.dp))
-                        Text("Continue")
+                        Spacer(Modifier.width(6.dp))
+                        Text("New Run", maxLines = 1)
                     }
                 }
-                Button(onClick = onStart) {
-                    Icon(Icons.Filled.PlayArrow, contentDescription = null)
-                    Spacer(Modifier.width(8.dp))
-                    Text("New Run")
+            }
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Difficulty.entries.forEach { difficulty ->
+                    FilterChip(
+                        selected = uiState.difficulty == difficulty,
+                        onClick = { onDifficulty(difficulty) },
+                        label = { Text(difficulty.label, fontSize = if (compact) 11.sp else 13.sp, maxLines = 1) },
+                    )
                 }
             }
-        }
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Difficulty.entries.forEach { difficulty ->
-                FilterChip(
-                    selected = uiState.difficulty == difficulty,
-                    onClick = { onDifficulty(difficulty) },
-                    label = { Text(difficulty.label) },
-                )
-            }
-        }
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
-        ) {
-            items(GameCatalog.characters, key = { it.id.name }) { character ->
-                CharacterCard(
-                    character = character,
-                    selected = uiState.selectedCharacter == character.id,
-                    onClick = { onCharacter(character.id) },
-                )
+            LazyColumn(
+                modifier = Modifier.weight(1f).fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(if (compact) 7.dp else 10.dp),
+            ) {
+                items(GameCatalog.characters, key = { it.id.name }) { character ->
+                    CharacterCard(
+                        character = character,
+                        selected = uiState.selectedCharacter == character.id,
+                        compact = compact,
+                        onClick = { onCharacter(character.id) },
+                    )
+                }
             }
         }
     }
 }
 
 @Composable
-private fun CharacterCard(character: CharacterDefinition, selected: Boolean, onClick: () -> Unit) {
+private fun CharacterCard(character: CharacterDefinition, selected: Boolean, compact: Boolean, onClick: () -> Unit) {
     val borderColor = if (selected) MaterialTheme.colorScheme.primary else Color(0xFF263348)
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .height(112.dp)
+            .height(if (compact) 98.dp else 112.dp)
             .clip(RoundedCornerShape(8.dp))
             .clickable(onClick = onClick)
             .border(BorderStroke(1.dp, borderColor), RoundedCornerShape(8.dp)),
         color = if (selected) Color(0xFF132236) else Color(0xFF0C111D),
     ) {
         Row(
-            modifier = Modifier.padding(14.dp),
+            modifier = Modifier.padding(if (compact) 8.dp else 14.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(14.dp),
+            horizontalArrangement = Arrangement.spacedBy(if (compact) 10.dp else 14.dp),
         ) {
-            CharacterPortrait(character, Modifier.size(82.dp))
+            CharacterPortrait(character, Modifier.size(if (compact) 62.dp else 78.dp))
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text(character.id.label, color = Color.White, fontSize = 22.sp, fontWeight = FontWeight.Black)
-                Text(character.archetype, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
-                Text(character.flavor, color = Color(0xFFCBD5E1), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(
+                    character.id.label,
+                    color = Color.White,
+                    fontSize = if (compact) 15.sp else 20.sp,
+                    fontWeight = FontWeight.Black,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                Text(
+                    character.archetype,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontSize = if (compact) 11.sp else 13.sp,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                Text(
+                    character.flavor,
+                    color = Color(0xFFCBD5E1),
+                    fontSize = if (compact) 10.sp else 12.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
             }
-            Column(horizontalAlignment = Alignment.End) {
-                BonusLine("Cap", "+${character.capacityBonus}")
-                BonusLine("Deal", "+${(character.negotiationBonus * 100).toInt()}%")
-                BonusLine("Rare", "+${(character.rareMarketBonus * 100).toInt()}%")
+            if (!compact) {
+                Column(horizontalAlignment = Alignment.End) {
+                    BonusLine("Cap", "+${character.capacityBonus}")
+                    BonusLine("Deal", "+${(character.negotiationBonus * 100).toInt()}%")
+                    BonusLine("Rare", "+${(character.rareMarketBonus * 100).toInt()}%")
+                }
             }
         }
     }
@@ -350,7 +398,7 @@ private fun GameScreen(
         if (compact) {
             Column(Modifier.fillMaxSize().padding(10.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Row(Modifier.weight(0.42f), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    PlayerStatsPanel(game, Modifier.width(250.dp).fillMaxHeight())
+                    PlayerStatsPanel(game, Modifier.width(250.dp).fillMaxHeight(), compact = true)
                     CityPanel(game.currentCity, Modifier.weight(1f).fillMaxHeight(), onSettings)
                 }
                 MarketAndActions(game, onTrade, onAction, onTravel, Modifier.weight(0.58f).fillMaxWidth())
@@ -358,7 +406,7 @@ private fun GameScreen(
         } else {
             Column(Modifier.fillMaxSize().padding(14.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Row(Modifier.weight(0.44f), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    PlayerStatsPanel(game, Modifier.width(300.dp).fillMaxHeight())
+                    PlayerStatsPanel(game, Modifier.width(300.dp).fillMaxHeight(), compact = false)
                     CityPanel(game.currentCity, Modifier.weight(1f).fillMaxHeight(), onSettings)
                     EventPanel(game, Modifier.width(300.dp).fillMaxHeight())
                 }
@@ -369,26 +417,34 @@ private fun GameScreen(
 }
 
 @Composable
-private fun PlayerStatsPanel(game: GameState, modifier: Modifier = Modifier) {
+private fun PlayerStatsPanel(game: GameState, modifier: Modifier = Modifier, compact: Boolean = false) {
     val character = GameCatalog.character(game.player.characterId)
     Panel(modifier) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            CharacterPortrait(character, Modifier.size(70.dp))
+            CharacterPortrait(character, Modifier.size(if (compact) 52.dp else 70.dp))
             Column(Modifier.weight(1f)) {
-                Text(character.id.label, color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Black)
-                Text(game.currentCityId.label, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
-                Text("Day ${game.day}", color = Color(0xFFCBD5E1), fontSize = 12.sp)
+                Text(character.id.label, color = Color.White, fontSize = if (compact) 16.sp else 20.sp, fontWeight = FontWeight.Black, maxLines = 1)
+                Text(game.currentCityId.label, color = MaterialTheme.colorScheme.primary, fontSize = if (compact) 13.sp else 16.sp, fontWeight = FontWeight.Bold, maxLines = 1)
+                Text("Day ${game.day}", color = Color(0xFFCBD5E1), fontSize = 11.sp)
+                if (compact) {
+                    Text("Cash $${game.player.cash}  Debt $${game.player.debt}", color = Color.White, fontSize = 9.sp, maxLines = 1)
+                    Text("Pack ${game.usedCapacity}/${game.player.capacity}  Heat ${game.player.heat}%  Gang ${game.player.gangPressure}%", color = Color(0xFFCBD5E1), fontSize = 9.sp, maxLines = 1)
+                }
             }
         }
-        Spacer(Modifier.height(10.dp))
-        StatRow(Icons.Filled.Favorite, "Health", "${game.player.health}/100")
-        StatRow(Icons.Filled.AttachMoney, "Cash", "$${game.player.cash}")
-        StatRow(Icons.Filled.Remove, "Debt", "$${game.player.debt}")
-        StatRow(Icons.Filled.ShoppingCart, "Inventory", "${game.usedCapacity}/${game.player.capacity}")
-        Meter("Heat", game.player.heat, MaterialTheme.colorScheme.secondary)
-        Meter("Risk", game.player.risk, Color(0xFFFDE047))
-        Meter("Gang", game.player.gangPressure, Color(0xFFFF6B6B))
-        StatRow(Icons.Filled.Shield, "Rep", game.player.reputation.toString())
+        Spacer(Modifier.height(if (compact) 4.dp else 10.dp))
+        if (compact) {
+            CompactStatLine("Health", "${game.player.health}", "Risk", "${game.player.risk}%", "Rep", game.player.reputation.toString())
+        } else {
+            StatRow(Icons.Filled.Favorite, "Health", "${game.player.health}/100")
+            StatRow(Icons.Filled.AttachMoney, "Cash", "$${game.player.cash}")
+            StatRow(Icons.Filled.Remove, "Debt", "$${game.player.debt}")
+            StatRow(Icons.Filled.ShoppingCart, "Inventory", "${game.usedCapacity}/${game.player.capacity}")
+            Meter("Heat", game.player.heat, MaterialTheme.colorScheme.secondary)
+            Meter("Risk", game.player.risk, Color(0xFFFDE047))
+            Meter("Gang", game.player.gangPressure, Color(0xFFFF6B6B))
+            StatRow(Icons.Filled.Shield, "Rep", game.player.reputation.toString())
+        }
     }
 }
 
@@ -449,24 +505,25 @@ private fun MarketAndActions(
         Panel(Modifier.width(210.dp).fillMaxHeight()) {
             Text("Actions", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Black)
             Spacer(Modifier.height(8.dp))
-            ActionButton("Travel", Icons.Filled.TravelExplore) { onTravel() }
-            ActionButton("Hide", Icons.Filled.Remove) { onAction(GameAction.Hide, Cue.Click) }
-            ActionButton("Rest", Icons.Filled.Favorite) { onAction(GameAction.Rest, Cue.Click) }
-            ActionButton("Upgrade", Icons.Filled.Add) { onAction(GameAction.UpgradeCapacity, Cue.Click) }
-            ActionButton("Bribe", Icons.Filled.LocalPolice) { onAction(GameAction.BribeOfficials, Cue.Siren) }
-            ActionButton("Contact", Icons.Filled.Shield) { onAction(GameAction.VisitContact, Cue.Click) }
-            ActionButton("Gamble", Icons.Filled.AttachMoney) { onAction(GameAction.Gamble, Cue.Danger) }
+            LazyColumn(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                item { ActionButton("Travel", Icons.Filled.TravelExplore) { onTravel() } }
+                item { ActionButton("Hide", Icons.Filled.Remove) { onAction(GameAction.Hide, Cue.Click) } }
+                item { ActionButton("Rest", Icons.Filled.Favorite) { onAction(GameAction.Rest, Cue.Click) } }
+                item { ActionButton("Upgrade", Icons.Filled.Add) { onAction(GameAction.UpgradeCapacity, Cue.Click) } }
+                item { ActionButton("Bribe", Icons.Filled.LocalPolice) { onAction(GameAction.BribeOfficials, Cue.Siren) } }
+                item { ActionButton("Contact", Icons.Filled.Shield) { onAction(GameAction.VisitContact, Cue.Click) } }
+                item { ActionButton("Gamble", Icons.Filled.AttachMoney) { onAction(GameAction.Gamble, Cue.Danger) } }
+            }
         }
         Panel(Modifier.weight(1f).fillMaxHeight()) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 Column {
                     Text("Market Board", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Black)
-                    Text(game.market.news, color = Color(0xFFCBD5E1), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(game.market.news, color = Color(0xFFCBD5E1), fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
-                Text("${game.market.items.size} active", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
             }
             Spacer(Modifier.height(8.dp))
-            LazyColumn(verticalArrangement = Arrangement.spacedBy(7.dp)) {
+            LazyColumn(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(7.dp)) {
                 items(items = game.market.items, key = { listing: MarketListing -> listing.itemId.name }) { listing: MarketListing ->
                     MarketRow(
                         listing = listing,
@@ -488,7 +545,7 @@ private fun MarketRow(listing: MarketListing, owned: Int, onBuy: () -> Unit, onS
         border = BorderStroke(1.dp, trendColor(listing.trend).copy(alpha = 0.45f)),
     ) {
         Row(
-            Modifier.fillMaxWidth().height(64.dp).padding(horizontal = 10.dp),
+            Modifier.fillMaxWidth().height(82.dp).padding(horizontal = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
@@ -598,7 +655,7 @@ private fun ActionButton(label: String, icon: ImageVector, onClick: () -> Unit) 
     ) {
         Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
         Spacer(Modifier.width(8.dp))
-        Text(label, modifier = Modifier.weight(1f), color = Color.White, fontWeight = FontWeight.Bold)
+        Text(label, modifier = Modifier.weight(1f), color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.Bold, maxLines = 1)
     }
 }
 
@@ -608,6 +665,30 @@ private fun StatRow(icon: ImageVector, label: String, value: String) {
         Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
         Text(label, color = Color(0xFFCBD5E1), modifier = Modifier.weight(1f), fontSize = 12.sp)
         Text(value, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+    }
+}
+
+@Composable
+private fun CompactStatLine(
+    leftLabel: String,
+    leftValue: String,
+    middleLabel: String,
+    middleValue: String,
+    rightLabel: String,
+    rightValue: String,
+) {
+    Row(Modifier.fillMaxWidth().height(24.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        CompactStat(leftLabel, leftValue, Modifier.weight(1f))
+        CompactStat(middleLabel, middleValue, Modifier.weight(1f))
+        CompactStat(rightLabel, rightValue, Modifier.weight(1f))
+    }
+}
+
+@Composable
+private fun CompactStat(label: String, value: String, modifier: Modifier = Modifier) {
+    Row(modifier, horizontalArrangement = Arrangement.SpaceBetween) {
+        Text(label, color = Color(0xFFCBD5E1), fontSize = 10.sp, maxLines = 1)
+        Text(value, color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold, maxLines = 1)
     }
 }
 

@@ -1,0 +1,209 @@
+package com.neoncartel.drugwars.domain.content
+
+import com.neoncartel.drugwars.domain.model.CharacterDefinition
+import com.neoncartel.drugwars.domain.model.CharacterId
+import com.neoncartel.drugwars.domain.model.City
+import com.neoncartel.drugwars.domain.model.CityId
+import com.neoncartel.drugwars.domain.model.ItemDefinition
+import com.neoncartel.drugwars.domain.model.ItemId
+
+object GameCatalog {
+    val items: List<ItemDefinition> = listOf(
+        ItemDefinition(ItemId.WEED, 60, 0.55, 0.88, 1, 13),
+        ItemDefinition(ItemId.COKE, 1_650, 1.15, 0.42, 1, 29),
+        ItemDefinition(ItemId.HASH, 140, 0.62, 0.78, 1, 41),
+        ItemDefinition(ItemId.LUDES, 420, 0.75, 0.58, 1, 53),
+        ItemDefinition(ItemId.METH, 950, 0.96, 0.52, 1, 67),
+        ItemDefinition(ItemId.HEROIN, 1_200, 1.08, 0.47, 1, 71),
+        ItemDefinition(ItemId.OXYS, 710, 0.82, 0.62, 1, 83),
+        ItemDefinition(ItemId.VIAGRA, 330, 0.45, 0.74, 1, 97),
+        ItemDefinition(ItemId.K2, 210, 0.9, 0.66, 1, 101),
+        ItemDefinition(ItemId.CRACK, 520, 1.0, 0.56, 1, 113),
+        ItemDefinition(ItemId.DABS, 260, 0.7, 0.72, 1, 127),
+        ItemDefinition(ItemId.MOONSHINE, 95, 0.58, 0.86, 2, 139),
+        ItemDefinition(ItemId.MDMA, 640, 0.88, 0.58, 1, 149),
+        ItemDefinition(ItemId.FLAKKA, 780, 1.35, 0.36, 1, 163),
+        ItemDefinition(ItemId.DMT, 1_050, 1.4, 0.34, 1, 179),
+        ItemDefinition(ItemId.SHROOMS, 180, 0.68, 0.75, 1, 191),
+        ItemDefinition(ItemId.SOMAS, 360, 0.64, 0.68, 1, 199),
+        ItemDefinition(ItemId.XANAX, 480, 0.66, 0.67, 1, 211),
+        ItemDefinition(ItemId.MORPHINE, 1_450, 1.22, 0.38, 1, 223),
+    )
+
+    val characters: List<CharacterDefinition> = listOf(
+        CharacterDefinition(
+            id = CharacterId.MARLOWE,
+            archetype = "Human fixer",
+            flavor = "Reads a room before the room knows it is being read.",
+            negotiationBonus = 0.08,
+        ),
+        CharacterDefinition(
+            id = CharacterId.NOVA,
+            archetype = "Human courier",
+            flavor = "Fast hands, faster exits, almost no paper trail.",
+            heatReduction = 2,
+            escapeBonus = 0.08,
+        ),
+        CharacterDefinition(
+            id = CharacterId.VERA,
+            archetype = "Human broker",
+            flavor = "Turns rumors into routes and routes into cash.",
+            rareMarketBonus = 0.08,
+            negotiationBonus = 0.03,
+        ),
+        CharacterDefinition(
+            id = CharacterId.KNOX,
+            archetype = "Human hauler",
+            flavor = "A quiet operator with reinforced compartments.",
+            capacityBonus = 8,
+            stashProtection = 0.05,
+        ),
+        CharacterDefinition(
+            id = CharacterId.RAZOR,
+            archetype = "Cybernetic lynx",
+            flavor = "Chrome reflexes and a sixth sense for ambushes.",
+            escapeBonus = 0.14,
+            heatReduction = 1,
+        ),
+        CharacterDefinition(
+            id = CharacterId.MICA,
+            archetype = "Augmented fox",
+            flavor = "Smiles like trouble and negotiates like a machine.",
+            negotiationBonus = 0.06,
+            rareMarketBonus = 0.05,
+        ),
+        CharacterDefinition(
+            id = CharacterId.BRASS,
+            archetype = "Cargo robot",
+            flavor = "Built for capacity, upgraded for deniability.",
+            capacityBonus = 14,
+            stashProtection = 0.08,
+        ),
+        CharacterDefinition(
+            id = CharacterId.ORBIT,
+            archetype = "Signal android",
+            flavor = "Predictive market scans hum behind glass eyes.",
+            rareMarketBonus = 0.12,
+            heatReduction = 1,
+        ),
+    )
+
+    val cities: List<City> = listOf(
+        City(
+            id = CityId.NEON_HARBOR,
+            danger = 48,
+            law = 44,
+            gang = 52,
+            priceIndex = 1.02,
+            palette = listOf("#28E6FF", "#FF3FB4", "#101827", "#F8F6E8"),
+            weather = "Salt rain and holo-fog",
+            skylineSeed = 8,
+            affinities = mapOf(ItemId.MDMA to 1.25, ItemId.COKE to 1.15, ItemId.MOONSHINE to 0.85),
+        ),
+        City(
+            id = CityId.DUSTLINE,
+            danger = 40,
+            law = 30,
+            gang = 58,
+            priceIndex = 0.92,
+            palette = listOf("#F6C65B", "#2DD4BF", "#3F1E18", "#FFF7D1"),
+            weather = "Dry heat and static wind",
+            skylineSeed = 15,
+            affinities = mapOf(ItemId.METH to 1.22, ItemId.MOONSHINE to 1.35, ItemId.HEROIN to 0.82),
+        ),
+        City(
+            id = CityId.IRON_DELTA,
+            danger = 56,
+            law = 42,
+            gang = 64,
+            priceIndex = 0.98,
+            palette = listOf("#F97316", "#64748B", "#111827", "#F8FAFC"),
+            weather = "Factory ash and orange sodium lamps",
+            skylineSeed = 23,
+            affinities = mapOf(ItemId.CRACK to 1.22, ItemId.K2 to 1.18, ItemId.VIAGRA to 0.9),
+        ),
+        City(
+            id = CityId.VELVET_STRIP,
+            danger = 52,
+            law = 55,
+            gang = 50,
+            priceIndex = 1.18,
+            palette = listOf("#FF3FB4", "#FDE047", "#201026", "#E0F2FE"),
+            weather = "Casino glare under midnight heat",
+            skylineSeed = 31,
+            affinities = mapOf(ItemId.MDMA to 1.38, ItemId.VIAGRA to 1.28, ItemId.COKE to 1.22),
+        ),
+        City(
+            id = CityId.RAIN_SPIRE,
+            danger = 60,
+            law = 70,
+            gang = 42,
+            priceIndex = 1.24,
+            palette = listOf("#38BDF8", "#A78BFA", "#08111E", "#E0FFFF"),
+            weather = "Vertical rain and drone sweeps",
+            skylineSeed = 44,
+            affinities = mapOf(ItemId.DMT to 1.28, ItemId.XANAX to 1.18, ItemId.WEED to 0.78),
+        ),
+        City(
+            id = CityId.BLACKWATER_PORT,
+            danger = 62,
+            law = 38,
+            gang = 72,
+            priceIndex = 1.08,
+            palette = listOf("#22D3EE", "#0F766E", "#06131A", "#E2E8F0"),
+            weather = "Diesel mist and container shadows",
+            skylineSeed = 52,
+            affinities = mapOf(ItemId.HEROIN to 1.26, ItemId.MORPHINE to 1.2, ItemId.HASH to 1.1),
+        ),
+        City(
+            id = CityId.FROST_GATE,
+            danger = 45,
+            law = 48,
+            gang = 34,
+            priceIndex = 1.15,
+            palette = listOf("#BAE6FD", "#FB7185", "#0F172A", "#FFFFFF"),
+            weather = "Mountain snow and black ice",
+            skylineSeed = 63,
+            affinities = mapOf(ItemId.OXYS to 1.26, ItemId.MORPHINE to 1.22, ItemId.MOONSHINE to 1.18),
+        ),
+        City(
+            id = CityId.SUNKEN_MARKET,
+            danger = 68,
+            law = 28,
+            gang = 78,
+            priceIndex = 0.9,
+            palette = listOf("#34D399", "#F43F5E", "#052E2B", "#DCFCE7"),
+            weather = "Floodlights over canal alleys",
+            skylineSeed = 78,
+            affinities = mapOf(ItemId.WEED to 1.3, ItemId.DABS to 1.25, ItemId.K2 to 1.2),
+        ),
+        City(
+            id = CityId.ASH_BOROUGH,
+            danger = 74,
+            law = 61,
+            gang = 66,
+            priceIndex = 1.1,
+            palette = listOf("#EF4444", "#94A3B8", "#111111", "#FEE2E2"),
+            weather = "Sirens bouncing off brick canyons",
+            skylineSeed = 87,
+            affinities = mapOf(ItemId.CRACK to 1.28, ItemId.FLAKKA to 1.22, ItemId.SOMAS to 1.12),
+        ),
+        City(
+            id = CityId.GLASS_MESA,
+            danger = 50,
+            law = 64,
+            gang = 44,
+            priceIndex = 1.3,
+            palette = listOf("#FDE68A", "#60A5FA", "#18181B", "#FAFAF9"),
+            weather = "Solar towers and silent patrol cars",
+            skylineSeed = 96,
+            affinities = mapOf(ItemId.DMT to 1.35, ItemId.SHROOMS to 1.25, ItemId.XANAX to 1.18),
+        ),
+    )
+
+    fun item(id: ItemId): ItemDefinition = items.first { it.id == id }
+
+    fun character(id: CharacterId): CharacterDefinition = characters.first { it.id == id }
+
+    fun city(id: CityId): City = cities.first { it.id == id }
+}

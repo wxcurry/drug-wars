@@ -6,4 +6,10 @@ These SVG files are local release-preview graphics generated for the repository:
 - `gameplay-dashboard.svg`
 - `character-select.svg`
 
-They do not contain copyrighted assets. Replace or supplement them with emulator/device screenshots for store submission.
+These PNG files were captured from a real debug install on a landscape Android device:
+
+- `device-launch.png`
+- `device-gameplay.png`
+- `device-smoke.png`
+
+They do not contain copyrighted assets and can be regenerated from the app at any time.

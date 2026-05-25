@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720">
+  <rect width="1280" height="720" fill="#05060A"/>
+  <text x="44" y="72" fill="#FFFFFF" font-family="Arial Black" font-size="48">NEON CARTEL</text>
+  <text x="48" y="112" fill="#CBD5E1" font-family="Arial" font-size="22">Pick an operator. Buy low, move fast, survive the heat.</text>
+  <g fill="#0A1020" stroke="#263348">
+    <rect x="44" y="150" width="570" height="112" rx="8"/>
+    <rect x="666" y="150" width="570" height="112" rx="8"/>
+    <rect x="44" y="292" width="570" height="112" rx="8"/>
+    <rect x="666" y="292" width="570" height="112" rx="8"/>
+    <rect x="44" y="434" width="570" height="112" rx="8"/>
+    <rect x="666" y="434" width="570" height="112" rx="8"/>
+  </g>
+  <g font-family="Arial Black" font-size="28" fill="#FFFFFF">
+    <text x="154" y="205">Marlowe</text><text x="776" y="205">Nova</text>
+    <text x="154" y="347">Vera</text><text x="776" y="347">Knox</text>
+    <text x="154" y="489">Razor</text><text x="776" y="489">Orbit</text>
+  </g>
+  <g fill="#28E6FF"><circle cx="96" cy="206" r="36"/><circle cx="718" cy="206" r="36"/><circle cx="96" cy="348" r="36"/><circle cx="718" cy="348" r="36"/><circle cx="96" cy="490" r="36"/><circle cx="718" cy="490" r="36"/></g>
+  <rect x="976" y="44" width="210" height="58" rx="12" fill="#28E6FF"/>
+  <text x="1018" y="82" fill="#001015" font-family="Arial Black" font-size="24">NEW RUN</text>
+</svg>

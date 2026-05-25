@@ -1,0 +1,2 @@
+-keep class com.neoncartel.drugwars.data.local.** { *; }
+-keep class * extends androidx.room.RoomDatabase

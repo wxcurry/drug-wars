@@ -9,7 +9,9 @@ import com.neoncartel.drugwars.domain.model.GameEvent
 import com.neoncartel.drugwars.domain.model.GameState
 import com.neoncartel.drugwars.domain.model.GameStatus
 import com.neoncartel.drugwars.domain.model.ItemId
+import com.neoncartel.drugwars.domain.model.MarketQuality
 import com.neoncartel.drugwars.domain.model.MarketListing
+import com.neoncartel.drugwars.domain.model.MarketRarity
 import com.neoncartel.drugwars.domain.model.MarketState
 import com.neoncartel.drugwars.domain.model.PlayerStats
 import com.neoncartel.drugwars.domain.model.Trend
@@ -119,6 +121,8 @@ object GameStateCodec {
                 listing.previousPrice,
                 listing.marginHint,
                 safe(listing.eventTag.orEmpty()),
+                listing.rarity.name,
+                listing.quality.name,
             ).joinToString(":")
         }
 
@@ -126,7 +130,7 @@ object GameStateCodec {
         value.split(";")
             .filter { it.isNotBlank() }
             .map {
-                val parts = it.split(":", limit = 7)
+                val parts = it.split(":", limit = 9)
                 MarketListing(
                     itemId = ItemId.valueOf(parts[0]),
                     price = parts[1].toInt(),
@@ -135,6 +139,8 @@ object GameStateCodec {
                     previousPrice = parts[4].toInt(),
                     marginHint = parts[5].toInt(),
                     eventTag = unsafe(parts[6]).ifBlank { null },
+                    rarity = parts.getOrNull(7)?.let(MarketRarity::valueOf) ?: MarketRarity.COMMON,
+                    quality = parts.getOrNull(8)?.let(MarketQuality::valueOf) ?: MarketQuality.STANDARD,
                 )
             }
 

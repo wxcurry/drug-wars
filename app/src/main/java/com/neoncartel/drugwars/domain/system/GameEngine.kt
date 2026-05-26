@@ -12,7 +12,9 @@ import com.neoncartel.drugwars.domain.model.GameResult
 import com.neoncartel.drugwars.domain.model.GameState
 import com.neoncartel.drugwars.domain.model.GameStatus
 import com.neoncartel.drugwars.domain.model.ItemId
+import com.neoncartel.drugwars.domain.model.MarketQuality
 import com.neoncartel.drugwars.domain.model.MarketListing
+import com.neoncartel.drugwars.domain.model.MarketRarity
 import com.neoncartel.drugwars.domain.model.MarketState
 import com.neoncartel.drugwars.domain.model.PlayerStats
 import com.neoncartel.drugwars.domain.model.TradeMode
@@ -404,6 +406,8 @@ class GameEngine {
             val affinity = city.affinities[item.id] ?: 1.0
             val spawnChance = (item.rarity * affinity + rareBonus).coerceIn(0.18, 0.96)
             if (random.nextDouble() > spawnChance) return@mapNotNull null
+            val rarity = rollMarketRarity(random, rareBonus)
+            val quality = rollMarketQuality(random)
             val eventMultiplier = when {
                 item.id == eventItem && eventTag == "legendary buyer" -> random.nextDouble(2.4, 4.5)
                 item.id == eventItem && eventTag == "shortage" -> random.nextDouble(1.55, 2.35)
@@ -412,7 +416,16 @@ class GameEngine {
                 else -> 1.0
             }
             val volatility = random.nextDouble(1.0 - item.volatility / 2.4, 1.0 + item.volatility)
-            val price = (item.baseValue * city.priceIndex * difficulty.priceMultiplier * affinity * eventMultiplier * volatility)
+            val price = (
+                item.baseValue *
+                    city.priceIndex *
+                    difficulty.priceMultiplier *
+                    affinity *
+                    eventMultiplier *
+                    volatility *
+                    rarity.priceMultiplier *
+                    quality.priceMultiplier
+                )
                 .roundToInt()
                 .coerceAtLeast(12)
             val old = previous[item.id] ?: (item.baseValue * city.priceIndex).roundToInt()
@@ -432,6 +445,8 @@ class GameEngine {
                 previousPrice = old,
                 marginHint = (((price - item.baseValue).toDouble() / item.baseValue) * 100).roundToInt(),
                 eventTag = if (item.id == eventItem) eventTag else null,
+                rarity = rarity,
+                quality = quality,
             )
         }.let { seeded ->
             if (seeded.size >= 8) seeded else {
@@ -440,8 +455,27 @@ class GameEngine {
                     .shuffled(random)
                     .take(8 - seeded.size)
                     .map { item ->
-                        val price = (item.baseValue * city.priceIndex * random.nextDouble(0.8, 1.35)).roundToInt()
-                        MarketListing(item.id, price, Trend.STABLE, random.nextInt(5, 28), item.baseValue, 0)
+                        val rarity = rollMarketRarity(random, rareBonus)
+                        val quality = rollMarketQuality(random)
+                        val price = (
+                            item.baseValue *
+                                city.priceIndex *
+                                random.nextDouble(0.8, 1.35) *
+                                rarity.priceMultiplier *
+                                quality.priceMultiplier
+                            )
+                            .roundToInt()
+                            .coerceAtLeast(12)
+                        MarketListing(
+                            itemId = item.id,
+                            price = price,
+                            trend = Trend.STABLE,
+                            available = random.nextInt(5, 28),
+                            previousPrice = item.baseValue,
+                            marginHint = (((price - item.baseValue).toDouble() / item.baseValue) * 100).roundToInt(),
+                            rarity = rarity,
+                            quality = quality,
+                        )
                     }
                 seeded + missing
             }
@@ -455,6 +489,28 @@ class GameEngine {
             else -> "${city.weather}. Prices churn across ${listings.size} active goods."
         }
         return MarketState(cityId = cityId, day = day, items = listings, news = news)
+    }
+
+    private fun rollMarketRarity(random: Random, rareBonus: Double): MarketRarity {
+        val extremelyRareChance = (0.01 + rareBonus * 0.04).coerceAtMost(0.025)
+        val rareChance = (0.14 + rareBonus * 0.35).coerceAtMost(0.25)
+        val roll = random.nextDouble()
+        return when {
+            roll < extremelyRareChance -> MarketRarity.EXTREMELY_RARE
+            roll < extremelyRareChance + rareChance -> MarketRarity.RARE
+            else -> MarketRarity.COMMON
+        }
+    }
+
+    private fun rollMarketQuality(random: Random): MarketQuality {
+        val roll = random.nextDouble()
+        return when {
+            roll < 0.12 -> MarketQuality.COMPLETE_SHIT
+            roll < 0.34 -> MarketQuality.ROUGH
+            roll < 0.72 -> MarketQuality.STANDARD
+            roll < 0.93 -> MarketQuality.GOOD
+            else -> MarketQuality.GREAT
+        }
     }
 
     private fun regenerateLocalMarket(state: GameState, day: Int): MarketState {

@@ -23,16 +23,26 @@ enum class ItemId(val label: String) {
 }
 
 enum class CityId(val label: String) {
-    NEON_HARBOR("Neon Harbor"),
-    DUSTLINE("Dustline"),
-    IRON_DELTA("Iron Delta"),
-    VELVET_STRIP("Velvet Strip"),
-    RAIN_SPIRE("Rain Spire"),
-    BLACKWATER_PORT("Blackwater Port"),
-    FROST_GATE("Frost Gate"),
-    SUNKEN_MARKET("Sunken Market"),
-    ASH_BOROUGH("Ash Borough"),
-    GLASS_MESA("Glass Mesa"),
+    NEON_HARBOR("Anchorage"),
+    DUSTLINE("Fairbanks"),
+    IRON_DELTA("Juneau"),
+    VELVET_STRIP("Sitka"),
+    RAIN_SPIRE("Ketchikan"),
+    BLACKWATER_PORT("Wasilla"),
+    FROST_GATE("Kenai"),
+    SUNKEN_MARKET("Kodiak"),
+    ASH_BOROUGH("Bethel"),
+    GLASS_MESA("Palmer"),
+    NOME("Nome"),
+    SEWARD("Seward"),
+    VALDEZ("Valdez"),
+    HOMER("Homer"),
+    SOLDOTNA("Soldotna"),
+    CORDOVA("Cordova"),
+    UNALASKA("Unalaska"),
+    BARROW("Barrow"),
+    KOTZEBUE("Kotzebue"),
+    PETERSBURG("Petersburg"),
 }
 
 enum class CharacterId(val label: String) {
@@ -64,6 +74,20 @@ enum class Trend {
     STABLE,
     UP,
     JACKPOT,
+}
+
+enum class MarketRarity(val priceMultiplier: Double) {
+    COMMON(1.0),
+    RARE(1.35),
+    EXTREMELY_RARE(2.25),
+}
+
+enum class MarketQuality(val priceMultiplier: Double) {
+    COMPLETE_SHIT(0.55),
+    ROUGH(0.82),
+    STANDARD(1.0),
+    GOOD(1.22),
+    GREAT(1.58),
 }
 
 enum class TradeMode {
@@ -139,6 +163,8 @@ data class MarketListing(
     val previousPrice: Int,
     val marginHint: Int,
     val eventTag: String? = null,
+    val rarity: MarketRarity = MarketRarity.COMMON,
+    val quality: MarketQuality = MarketQuality.STANDARD,
 )
 
 data class MarketState(

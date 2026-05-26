@@ -20,7 +20,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             DrugWarsTheme {
                 val context = LocalContext.current
-                val app = context.applicationContext as NeonCartelApp
+                val app = context.applicationContext as DrugWarsApplication
                 val audio = remember { GameAudio(context) }
                 DisposableEffect(Unit) {
                     onDispose { audio.release() }

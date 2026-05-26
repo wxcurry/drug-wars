@@ -7,12 +7,14 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
@@ -20,21 +22,55 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.neoncartel.drugwars.R
 import com.neoncartel.drugwars.domain.content.GameCatalog
 import com.neoncartel.drugwars.domain.model.CharacterDefinition
+import com.neoncartel.drugwars.domain.model.CharacterId
 import com.neoncartel.drugwars.domain.model.City
+import com.neoncartel.drugwars.domain.model.CityId
 import com.neoncartel.drugwars.domain.model.ItemId
 import kotlin.math.cos
+import kotlin.math.max
 import kotlin.math.sin
 
+object CityBackdropLayout {
+    val AnchorageBannerContentScale: ContentScale = ContentScale.FillWidth
+
+    fun anchorageHorizontalCropPx(
+        containerWidthPx: Float,
+        containerHeightPx: Float,
+        imageWidthPx: Float,
+        imageHeightPx: Float,
+    ): Float {
+        val scaleFactor = AnchorageBannerContentScale.computeScaleFactor(
+            srcSize = Size(imageWidthPx, imageHeightPx),
+            dstSize = Size(containerWidthPx, containerHeightPx),
+        )
+        val drawnWidthPx = imageWidthPx * scaleFactor.scaleX
+        return max(0f, drawnWidthPx - containerWidthPx)
+    }
+}
+
 @Composable
-fun CityBackdrop(city: City, modifier: Modifier = Modifier) {
+fun CityBackdrop(city: City, modifier: Modifier = Modifier, showLabels: Boolean = true) {
+    if (city.id == CityId.NEON_HARBOR) {
+        Image(
+            painter = painterResource(R.drawable.anchorage),
+            contentDescription = "Anchorage banner",
+            modifier = modifier.background(Color(0xFF05060A)),
+            contentScale = CityBackdropLayout.AnchorageBannerContentScale,
+        )
+        return
+    }
+
     val transition = rememberInfiniteTransition(label = "city")
     val drift by transition.animateFloat(
         initialValue = 0f,
@@ -106,31 +142,51 @@ fun CityBackdrop(city: City, modifier: Modifier = Modifier) {
             end = Offset(size.width, horizon - 24f),
             strokeWidth = 3f,
         )
-        drawText(
-            textMeasurer = textMeasurer,
-            text = city.id.label.uppercase(),
-            topLeft = Offset(24f, 16f),
-            style = TextStyle(
-                color = Color.White,
-                fontSize = 28.sp,
-                fontWeight = FontWeight.Black,
-            ),
-        )
-        drawText(
-            textMeasurer = textMeasurer,
-            text = city.weather,
-            topLeft = Offset(26f, 58f),
-            style = TextStyle(
-                color = palette[3].copy(alpha = 0.86f),
-                fontSize = 13.sp,
-                fontWeight = FontWeight.Medium,
-            ),
-        )
+        if (showLabels) {
+            drawText(
+                textMeasurer = textMeasurer,
+                text = city.id.label.uppercase(),
+                topLeft = Offset(24f, 16f),
+                style = TextStyle(
+                    color = Color.White,
+                    fontSize = 28.sp,
+                    fontWeight = FontWeight.Black,
+                ),
+            )
+            drawText(
+                textMeasurer = textMeasurer,
+                text = city.weather,
+                topLeft = Offset(26f, 58f),
+                style = TextStyle(
+                    color = palette[3].copy(alpha = 0.86f),
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Medium,
+                ),
+            )
+        }
     }
 }
 
 @Composable
 fun CharacterPortrait(character: CharacterDefinition, modifier: Modifier = Modifier) {
+    val portraitRes = when (character.id) {
+        CharacterId.MARLOWE -> R.drawable.marlowe_icon
+        CharacterId.VERA -> R.drawable.vera_icon
+        else -> null
+    }
+
+    if (portraitRes != null) {
+        Image(
+            painter = painterResource(portraitRes),
+            contentDescription = "${character.id.label} portrait",
+            modifier = modifier
+                .size(88.dp)
+                .clip(CircleShape),
+            contentScale = ContentScale.Crop,
+        )
+        return
+    }
+
     val palette = when (character.id.ordinal % 4) {
         0 -> listOf(Color(0xFF28E6FF), Color(0xFFFF3FB4), Color(0xFF111827))
         1 -> listOf(Color(0xFFFDE047), Color(0xFF38BDF8), Color(0xFF1E1B4B))
@@ -168,10 +224,10 @@ fun CharacterPortrait(character: CharacterDefinition, modifier: Modifier = Modif
 }
 
 @Composable
-fun ItemGlyph(itemId: ItemId, modifier: Modifier = Modifier) {
+fun ItemGlyph(itemId: ItemId, modifier: Modifier = Modifier.size(36.dp), colorOverride: Color? = null) {
     val item = GameCatalog.item(itemId)
-    val color = Color.hsv((item.iconSeed * 19 % 360).toFloat(), 0.72f, 0.96f)
-    Canvas(modifier = modifier.size(36.dp)) {
+    val color = colorOverride ?: Color.hsv((item.iconSeed * 19 % 360).toFloat(), 0.72f, 0.96f)
+    Canvas(modifier = modifier) {
         drawRoundRect(Color(0xFF101827), size = size, cornerRadius = androidx.compose.ui.geometry.CornerRadius(8f, 8f))
         val points = 5 + item.iconSeed % 4
         val path = Path()

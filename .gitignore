@@ -6,6 +6,7 @@
 /app/schemas/
 local.properties
 captures/
+.superpowers/
 *.apk
 *.aab
 *.jks

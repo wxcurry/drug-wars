@@ -1,4 +1,4 @@
-# Neon Cartel
+# Drug Wars
 
 Native Android strategy/trading game inspired by classic territory market games, rebuilt with Kotlin, Jetpack Compose, Material 3, Room, coroutines, Flow, and Navigation Compose.
 
@@ -33,7 +33,7 @@ Run checks:
 - Coroutines and Flow
 - Navigation Compose
 - Gradle Kotlin DSL
-- Procedural Compose art plus generated local vector/WAV assets
+- Procedural Compose art and local WAV effects
 
 ## Gameplay Systems
 
@@ -44,7 +44,7 @@ Run checks:
 - Risk model that escalates heat and gang pressure when lingering, travelling, trading, or gambling.
 - Police sweep, arrest, fine, bail, confiscation, jail-time skip, gang ambush, robbery, damage, and escape outcomes.
 - Room-backed autosave after every action.
-- Landscape-first responsive dashboard for phones and tablets.
+- Portrait-first responsive dashboard for phones and tablets.
 
 ## Repository Structure
 
@@ -82,4 +82,3 @@ Major systems were developed on separate branches and merged through PRs:
 - PR #1: deterministic gameplay engine
 - PR #2: Room autosave state
 - PR #3: playable Compose game UI
-

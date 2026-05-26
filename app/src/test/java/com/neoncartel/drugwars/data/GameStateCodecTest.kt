@@ -5,6 +5,8 @@ import com.neoncartel.drugwars.domain.model.CharacterId
 import com.neoncartel.drugwars.domain.model.Difficulty
 import com.neoncartel.drugwars.domain.model.GameAction
 import com.neoncartel.drugwars.domain.model.ItemId
+import com.neoncartel.drugwars.domain.model.MarketQuality
+import com.neoncartel.drugwars.domain.model.MarketRarity
 import com.neoncartel.drugwars.domain.model.TradeMode
 import com.neoncartel.drugwars.domain.system.GameEngine
 import org.junit.Assert.assertEquals
@@ -32,5 +34,20 @@ class GameStateCodecTest {
         assertEquals(moved.market.items, restored.market.items)
         assertEquals(moved.timeline.take(6), restored.timeline.take(6))
         assertTrue(restored.inventory[ItemId.valueOf(first.itemId.name)] == moved.inventory[first.itemId])
+    }
+
+    @Test
+    fun encodedStateRestoresListingRarityAndQuality() {
+        val start = engine.newGame(CharacterId.ORBIT, Difficulty.HARD, seed = 12_345L)
+        val markedListing = start.market.items.first().copy(
+            rarity = MarketRarity.EXTREMELY_RARE,
+            quality = MarketQuality.GREAT,
+        )
+        val marked = start.copy(market = start.market.copy(items = listOf(markedListing)))
+
+        val restored = GameStateCodec.decode(GameStateCodec.encode(marked))
+
+        assertEquals(MarketRarity.EXTREMELY_RARE, restored.market.items.single().rarity)
+        assertEquals(MarketQuality.GREAT, restored.market.items.single().quality)
     }
 }

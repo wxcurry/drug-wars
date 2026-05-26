@@ -6,7 +6,7 @@ import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 
-private val NeonColors: ColorScheme = darkColorScheme(
+private val DrugWarsColors: ColorScheme = darkColorScheme(
     primary = Color(0xFF28E6FF),
     onPrimary = Color(0xFF001015),
     secondary = Color(0xFFFF3FB4),
@@ -25,7 +25,7 @@ private val NeonColors: ColorScheme = darkColorScheme(
 @Composable
 fun DrugWarsTheme(content: @Composable () -> Unit) {
     MaterialTheme(
-        colorScheme = NeonColors,
+        colorScheme = DrugWarsColors,
         typography = MaterialTheme.typography,
         content = content,
     )

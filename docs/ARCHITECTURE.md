@@ -1,6 +1,6 @@
 # Architecture
 
-Neon Cartel uses a clean, layered Android architecture.
+Drug Wars uses a clean, layered Android architecture.
 
 ## Domain
 
@@ -51,7 +51,7 @@ Navigation Compose routes:
 - `travel`
 - `settings`
 
-The main game screen is landscape-first and responsive. It presents:
+The main game screen is portrait-first and responsive. It presents:
 
 - left player stat panel
 - center animated city skyline
@@ -70,4 +70,3 @@ Unit tests cover:
 - escalating heat/gang danger
 - capacity upgrades
 - save codec round trip
-

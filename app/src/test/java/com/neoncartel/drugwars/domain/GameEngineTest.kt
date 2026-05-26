@@ -1,10 +1,13 @@
 package com.neoncartel.drugwars.domain
 
+import com.neoncartel.drugwars.domain.content.GameCatalog
 import com.neoncartel.drugwars.domain.model.CharacterId
 import com.neoncartel.drugwars.domain.model.Difficulty
 import com.neoncartel.drugwars.domain.model.GameAction
 import com.neoncartel.drugwars.domain.model.GameStatus
 import com.neoncartel.drugwars.domain.model.ItemId
+import com.neoncartel.drugwars.domain.model.MarketQuality
+import com.neoncartel.drugwars.domain.model.MarketRarity
 import com.neoncartel.drugwars.domain.model.TradeMode
 import com.neoncartel.drugwars.domain.system.GameEngine
 import org.junit.Assert.assertEquals
@@ -26,6 +29,76 @@ class GameEngineTest {
         assertTrue(state.player.capacity >= 28)
         assertTrue(state.market.items.size in 8..14)
         assertTrue(state.market.items.all { it.available > 0 && it.price > 0 })
+        assertTrue(state.market.items.all { it.rarity in MarketRarity.entries })
+        assertTrue(state.market.items.all { it.quality in MarketQuality.entries })
+    }
+
+    @Test
+    fun catalogUsesRequestedAlaskaCityNamesInOrder() {
+        assertEquals(
+            listOf(
+                "Anchorage",
+                "Fairbanks",
+                "Juneau",
+                "Sitka",
+                "Ketchikan",
+                "Wasilla",
+                "Kenai",
+                "Kodiak",
+                "Bethel",
+                "Palmer",
+                "Nome",
+                "Seward",
+                "Valdez",
+                "Homer",
+                "Soldotna",
+                "Cordova",
+                "Unalaska",
+                "Barrow",
+                "Kotzebue",
+                "Petersburg",
+            ),
+            GameCatalog.cities.map { it.id.label },
+        )
+    }
+
+    @Test
+    fun newGameStartsInAnchorage() {
+        val state = engine.newGame(CharacterId.NOVA, Difficulty.NORMAL, seed = 1234L)
+
+        assertEquals("Anchorage", state.currentCityId.label)
+    }
+
+    @Test
+    fun rarityAndQualityMultipliersIncreasePricePressure() {
+        assertTrue(MarketRarity.RARE.priceMultiplier > MarketRarity.COMMON.priceMultiplier)
+        assertTrue(MarketRarity.EXTREMELY_RARE.priceMultiplier > MarketRarity.RARE.priceMultiplier)
+        assertTrue(MarketQuality.GREAT.priceMultiplier > MarketQuality.STANDARD.priceMultiplier)
+        assertTrue(MarketQuality.STANDARD.priceMultiplier > MarketQuality.COMPLETE_SHIT.priceMultiplier)
+    }
+
+    @Test
+    fun generatedMarketsRandomizeRarityAndQuality() {
+        val listings = (1L..80L).flatMap { seed ->
+            engine.newGame(CharacterId.NOVA, Difficulty.NORMAL, seed = seed).market.items
+        }
+
+        assertTrue(listings.map { it.rarity }.toSet().contains(MarketRarity.RARE))
+        assertTrue(listings.map { it.quality }.toSet().size >= 3)
+    }
+
+    @Test
+    fun extremelyRareListingsRemainScarceAcrossGeneratedMarkets() {
+        val listings = (1L..600L).flatMap { seed ->
+            engine.newGame(CharacterId.NOVA, Difficulty.NORMAL, seed = seed).market.items
+        }
+        val extremelyRareCount = listings.count { it.rarity == MarketRarity.EXTREMELY_RARE }
+
+        assertTrue("Expected at least one extremely rare listing across the sample", extremelyRareCount > 0)
+        assertTrue(
+            "Extremely rare listings should stay below 3% of generated listings but were $extremelyRareCount of ${listings.size}",
+            extremelyRareCount.toDouble() / listings.size < 0.03,
+        )
     }
 
     @Test
